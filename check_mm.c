@@ -280,6 +280,42 @@ END_TEST
  * { You may provide more unit tests here, but remember to add them to simple_malloc_suite }
  */
 
+
+/* Test that proves the allocator is not first fit.
+ * Sequence:
+ *  - allocate a, b, c, d
+ *  - free a (low address)
+ *  - free c (higher address) -> allocator's "current" should end up at c
+ *  - allocate e of same size: first fit would return a, a next fit starting at c returns c
+ */
+
+START_TEST(test_not_first_fit)
+{
+    void *a = simple_malloc(0x100);
+    ck_assert_ptr_nonnull(a);
+    void *b = simple_malloc(0x100);
+    ck_assert_ptr_nonnull(b);
+    void *c = simple_malloc(0x100);
+    ck_assert_ptr_nonnull(c);
+    void *d = simple_malloc(0x100);
+    ck_assert_ptr_nonnull(d);
+
+    simple_free(a); /* lower hole */
+    simple_free(c); /* higher hole; frees in this order to move current to c */
+
+    void *e = simple_malloc(0x100);
+    ck_assert_ptr_nonnull(e);
+
+    /* If allocator were first fit it would return 'a'. Assert it returns 'c' instead. */
+    ck_assert_ptr_eq(e, c);
+
+    /* cleanup */
+    simple_free(b);
+    simple_free(d);
+    simple_free(e);
+}
+END_TEST
+
 /**
  * @name   Example unit test suite.
  * @brief  Add your new unit tests to this suite.
@@ -293,6 +329,7 @@ Suite* simple_malloc_suite()
   tcase_add_test (tc_core, test_simple_allocation);
   tcase_add_test (tc_core, test_simple_unique_addresses);
   tcase_add_test (tc_core, test_memory_exerciser);
+  tcase_add_test (tc_core, test_not_first_fit);
 
   suite_add_tcase(s, tc_core);
   return s;
