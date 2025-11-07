@@ -22,9 +22,9 @@ typedef struct header {
 /* Macros to handle the free flag at bit 0 of the next pointer of header pointed at by p */
 #define GET_NEXT(p)    (BlockHeader *) ( (uintptr_t) (p->next) & ~(uintptr_t)1 )    /* Mask out free flag */
 #define SET_NEXT(p,n)  do { \
-                         uintptr_t _flag = (uintptr_t)(p->next) & (uintptr_t)1; \
-                         uintptr_t _ptr  = ((uintptr_t)(n)) & ~(uintptr_t)1; \
-                         p->next = (BlockHeader *)(_ptr | _flag); \
+                         uintptr_t flag = (uintptr_t)(p->next) & (uintptr_t)1; \
+                         uintptr_t ptr  = ((uintptr_t)(n)) & ~(uintptr_t)1; \
+                         p->next = (BlockHeader *)(ptr | flag); \
                        } while(0)  /* Preserve free flag. Uses bitwise NOT + AND to clear the lowest 3 bit */
 #define GET_FREE(p)    (uint8_t) ( (((uintptr_t)((p)->next)) & (uintptr_t)0x1) )
 #define SET_FREE(p,f)  do { \
